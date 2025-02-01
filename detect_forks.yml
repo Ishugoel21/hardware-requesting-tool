@@ -1,0 +1,35 @@
+name: Detect Forks
+
+on: 
+  fork:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log Fork Event
+        run: echo "🚨 A new fork was created by ${{ github.actor }}"
+
+      - name: Create an Issue to Notify Fork Owner
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: "🚨 Unauthorized Fork Detected",
+              body: `@${{ github.actor }} You have forked this repository. If this was unauthorized, please delete it immediately or risk being reported.`,
+            });
+
+      - name: Send Email Notification
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "🚨 Unauthorized Fork Detected"
+          to: "goelishu868@gmail.com"
+          from: "GitHub Action Bot"
+          body: "A new fork has been detected by ${{ github.actor }} on your repository ${{ github.repository }}. You may want to report it."
